@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bible Verse Every Minute</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .timer {
+            font-size: 2rem;
+            margin-bottom: 30px;
+            color: #ffd700;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .verse-container {
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .verse-text {
+            font-size: 1.4rem;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            font-style: italic;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
+        .verse-reference {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #ffd700;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+            margin-top: 30px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ffd700, #ffed4e);
+            border-radius: 3px;
+            transition: width 1s linear;
+        }
+
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .verse-counter {
+            margin-top: 15px;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .verse-text {
+                font-size: 1.2rem;
+            }
+            
+            .timer {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="timer" id="timer">Next verse in: 60s</div>
+        
+        <div class="verse-container">
+            <div class="verse-text" id="verseText">Loading verse...</div>
+            <div class="verse-reference" id="verseReference"></div>
+        </div>
+        
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        
+        <div class="controls">
+            <button onclick="nextVerse()">Next Verse</button>
+            <button onclick="previousVerse()">Previous Verse</button>
+            <button onclick="toggleAutoAdvance()" id="toggleBtn">Pause Auto</button>
+            <button onclick="randomVerse()">Random Verse</button>
+        </div>
+        
+        <div class="verse-counter" id="verseCounter">Verse 1 of 1000</div>
+    </div>
+
+    <script>
+        // Comprehensive Bible verses from throughout the Bible
+        const bibleVerses = [
+            { text: "In the beginning God created the heavens and the earth.", reference: "Genesis 1:1" },
+            { text: "For God so loved the world that he gave his one and only Son, that whoever believes in him shall not perish but have eternal life.", reference: "John 3:16" },
+            { text: "The Lord is my shepherd, I lack nothing.", reference: "Psalm 23:1" },
+            { text: "Trust in the Lord with all your heart and lean not on your own understanding.", reference: "Proverbs 3:5" },
+            { text: "I can do all this through him who gives me strength.", reference: "Philippians 4:13" },
+            { text: "Be strong and courageous. Do not be afraid; do not be discouraged, for the Lord your God will be with you wherever you go.", reference: "Joshua 1:9" },
+            { text: "And we know that in all things God works for the good of those who love him, who have been called according to his purpose.", reference: "Romans 8:28" },
+            { text: "Cast all your anxiety on him because he cares for you.", reference: "1 Peter 5:7" },
+            { text: "The Lord your God is with you, the Mighty Warrior who saves. He will take great delight in you; in his love he will no longer rebuke you, but will rejoice over you with singing.", reference: "Zephaniah 3:17" },
+            { text: "Have I not commanded you? Be strong and courageous. Do not be afraid; do not be discouraged, for the Lord your God will be with you wherever you go.", reference: "Joshua 1:9" },
+            { text: "But those who hope in the Lord will renew their strength. They will soar on wings like eagles; they will run and not grow weary, they will walk and not be faint.", reference: "Isaiah 40:31" },
+            { text: "For I know the plans I have for you, declares the Lord, plans to prosper you and not to harm you, to give you hope and a future.", reference: "Jeremiah 29:11" },
+            { text: "The Lord is close to the brokenhearted and saves those who are crushed in spirit.", reference: "Psalm 34:18" },
+            { text: "Come to me, all you who are weary and burdened, and I will give you rest.", reference: "Matthew 11:28" },
+            { text: "And my God will meet all your needs according to the riches of his glory in Christ Jesus.", reference: "Philippians 4:19" },
+            { text: "Peace I leave with you; my peace I give you. I do not give to you as the world gives. Do not let your hearts be troubled and do not be afraid.", reference: "John 14:27" },
+            { text: "The name of the Lord is a fortified tower; the righteous run to it and are safe.", reference: "Proverbs 18:10" },
+            { text: "He heals the brokenhearted and binds up their wounds.", reference: "Psalm 147:3" },
+            { text: "Therefore do not worry about tomorrow, for tomorrow will worry about itself. Each day has enough trouble of its own.", reference: "Matthew 6:34" },
+            { text: "The Lord will fight for you; you need only to be still.", reference: "Exodus 14:14" },
+            { text: "She is clothed with strength and dignity; she can laugh at the days to come.", reference: "Proverbs 31:25" },
+            { text: "In their hearts humans plan their course, but the Lord establishes their steps.", reference: "Proverbs 16:9" },
+            { text: "The Lord bless you and keep you; the Lord make his face shine on you and be gracious to you.", reference: "Numbers 6:24-25" },
+            { text: "Delight yourself in the Lord, and he will give you the desires of your heart.", reference: "Psalm 37:4" },
+            { text: "Even though I walk through the darkest valley, I will fear no evil, for you are with me.", reference: "Psalm 23:4" },
+            { text: "Let us then approach God's throne of grace with confidence, so that we may receive mercy and find grace to help us in our time of need.", reference: "Hebrews 4:16" },
+            { text: "If we confess our sins, he is faithful and just and will forgive us our sins and purify us from all unrighteousness.", reference: "1 John 1:9" },
+            { text: "No weapon forged against you will prevail, and you will refute every tongue that accuses you.", reference: "Isaiah 54:17" },
+            { text: "Give thanks to the Lord, for he is good; his love endures forever.", reference: "Psalm 107:1" },
+            { text: "The joy of the Lord is your strength.", reference: "Nehemiah 8:10" },
+            { text: "God is our refuge and strength, an ever-present help in trouble.", reference: "Psalm 46:1" },
+            { text: "Commit to the Lord whatever you do, and he will establish your plans.", reference: "Proverbs 16:3" },
+            { text: "Above all else, guard your heart, for everything you do flows from it.", reference: "Proverbs 4:23" },
+            { text: "Therefore, if anyone is in Christ, the new creation has come: The old has gone, the new is here!", reference: "2 Corinthians 5:17" },
+            { text: "But seek first his kingdom and his righteousness, and all these things will be given to you as well.", reference: "Matthew 6:33" },
+            { text: "This is the day the Lord has made; we will rejoice and be glad in it.", reference: "Psalm 118:24" },
+            { text: "Greater love has no one than this: to lay down one's life for one's friends.", reference: "John 15:13" },
+            { text: "The Lord is my light and my salvation—whom shall I fear? The Lord is the stronghold of my life—of whom shall I be afraid?", reference: "Psalm 27:1" },
+            { text: "And without faith it is impossible to please God, because anyone who comes to him must believe that he exists and that he rewards those who earnestly seek him.", reference: "Hebrews 11:6" },
+            { text: "Do not be anxious about anything, but in every situation, by prayer and petition, with thanksgiving, present your requests to God.", reference: "Philippians 4:6" },
+            { text: "Love is patient, love is kind. It does not envy, it does not boast, it is not proud.", reference: "1 Corinthians 13:4" },
+            { text: "And God is able to bless you abundantly, so that in all things at all times, having all that you need, you will abound in every good work.", reference: "2 Corinthians 9:8" },
+            { text: "Call to me and I will answer you and tell you great and unsearchable things you do not know.", reference: "Jeremiah 33:3" },
+            { text: "The heart of man plans his way, but the Lord establishes his steps.", reference: "Proverbs 16:9" },
+            { text: "Weeping may stay for the night, but rejoicing comes in the morning.", reference: "Psalm 30:5" },
+            { text: "Then Jesus said, 'Come to me, all of you who are weary and carry heavy burdens, and I will give you rest.'", reference: "Matthew 11:28" },
+            { text: "Be kind and compassionate to one another, forgiving each other, just as in Christ God forgave you.", reference: "Ephesians 4:32" },
+            { text: "Wait for the Lord; be strong and take heart and wait for the Lord.", reference: "Psalm 27:14" },
+            { text: "You are the light of the world. A town built on a hill cannot be hidden.", reference: "Matthew 5:14" },
+            { text: "Taste and see that the Lord is good; blessed is the one who takes refuge in him.", reference: "Psalm 34:8" },
+            { text: "Many are the plans in a person's heart, but it is the Lord's purpose that prevails.", reference: "Proverbs 19:21" },
+            { text: "Whoever dwells in the shelter of the Most High will rest in the shadow of the Almighty.", reference: "Psalm 91:1" },
+            { text: "The Lord himself goes before you and will be with you; he will never leave you nor forsake you. Do not be afraid; do not be discouraged.", reference: "Deuteronomy 31:8" },
+            { text: "Create in me a pure heart, O God, and renew a steadfast spirit within me.", reference: "Psalm 51:10" },
+            { text: "Therefore encourage one another and build each other up, just as in fact you are doing.", reference: "1 Thessalonians 5:11" },
+            { text: "The Lord is not slow in keeping his promise, as some understand slowness. Instead he is patient with you, not wanting anyone to perish, but everyone to come to repentance.", reference: "2 Peter 3:9" },
+            { text: "May the God of hope fill you with all joy and peace as you trust in him, so that you may overflow with hope by the power of the Holy Spirit.", reference: "Romans 15:13" },
+            { text: "Jesus replied, 'What is impossible with man is possible with God.'", reference: "Luke 18:27" },
+            { text: "Let us hold unswervingly to the hope we profess, for he who promised is faithful.", reference: "Hebrews 10:23" },
+            { text: "But the fruit of the Spirit is love, joy, peace, forbearance, kindness, goodness, faithfulness, gentleness and self-control.", reference: "Galatians 5:22-23" },
+            { text: "The Lord your God is in your midst, a mighty one who will save; he will rejoice over you with gladness; he will quiet you by his love.", reference: "Zephaniah 3:17" }
+        ];
+
+        let currentVerseIndex = 0;
+        let countdown = 60;
+        let isAutoAdvancing = true;
+        let timer;
+        let progressTimer;
+
+        function displayVerse(index) {
+            const verse = bibleVerses[index];
+            document.getElementById('verseText').textContent = verse.text;
+            document.getElementById('verseReference').textContent = verse.reference;
+            document.getElementById('verseCounter').textContent = Verse ${index + 1} of ${bibleVerses.length};
+        }
+
+        function updateTimer() {
+            document.getElementById('timer').textContent = Next verse in: ${countdown}s;
+            
+            // Update progress bar
+            const progress = ((60 - countdown) / 60) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+            
+            if (countdown <= 0 && isAutoAdvancing) {
+                nextVerse();
+                countdown = 60;
+            } else {
+                countdown--;
+            }
+        }
+
+        function nextVerse() {
+            currentVerseIndex = (currentVerseIndex + 1) % bibleVerses.length;
+            displayVerse(currentVerseIndex);
+            countdown = 60;
+        }
+
+        function previousVerse() {
+            currentVerseIndex = currentVerseIndex === 0 ? bibleVerses.length - 1 : currentVerseIndex - 1;
+            displayVerse(currentVerseIndex);
+            countdown = 60;
+        }
+
+        function randomVerse() {
+            currentVerseIndex = Math.floor(Math.random() * bibleVerses.length);
+            displayVerse(currentVerseIndex);
+            countdown = 60;
+        }
+
+        function toggleAutoAdvance() {
+            isAutoAdvancing = !isAutoAdvancing;
+            const btn = document.getElementById('toggleBtn');
+            btn.textContent = isAutoAdvancing ? 'Pause Auto' : 'Resume Auto';
+            
+            if (!isAutoAdvancing) {
+                document.getElementById('timer').textContent = 'Auto-advance paused';
+                document.getElementById('progressFill').style.width = '0%';
+            } else {
+                countdown = 60;
+            }
+        }
+
+        // Initialize
+        displayVerse(0);
+        timer = setInterval(updateTimer, 1000);
+
+        // Add keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            switch(e.key) {
+                case 'ArrowRight':
+                case ' ':
+                    e.preventDefault();
+                    nextVerse();
+                    break;
+                case 'ArrowLeft':
+                    e.preventDefault();
+                    previousVerse();
+                    break;
+                case 'r':
+                case 'R':
+                    e.preventDefault();
+                    randomVerse();
+                    break;
+                case 'p':
+                case 'P':
+                    e.preventDefault();
+                    toggleAutoAdvance();
+                    break;
+            }
+        });
+    </script>
+</body>
+</html>
